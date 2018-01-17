@@ -1,7 +1,7 @@
 FROM webdevops/bootstrap:ubuntu-16.04
 MAINTAINER Hans Hoechtl "hhoechtl@1drop.de"
 
-ENV POOTLE_VERSION="2.7.6"
+ENV POOTLE_VERSION="2.8.2"
 
 RUN chmod -R 2777 /tmp
 
@@ -54,7 +54,7 @@ RUN pootle assets build
 
 WORKDIR /home/pootle
 
-EXPOSE 8080
+EXPOSE 8000
 VOLUME ["/usr/local/lib/python2.7/dist-packages/pootle"]
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 CMD ["/usr/bin/supervisord"]
