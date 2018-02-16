@@ -46,6 +46,7 @@ RUN pip install -I pootle==$POOTLE_VERSION
 
 # Configure pootle
 COPY pootle.conf /root/.pootle/pootle.conf
+COPY run-pootle.sh /usr/local/bin/run-pootle.sh
 RUN mkdir -p /srv/pootle/po/.tmp
 RUN ln -s /usr/lib/python2.7/dist-packages/xapian /usr/local/lib/python2.7/dist-packages/xapian
 
@@ -64,5 +65,5 @@ WORKDIR /home/pootle
 
 EXPOSE 8000
 VOLUME ["/usr/local/lib/python2.7/dist-packages/pootle"]
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-CMD ["/usr/bin/supervisord"]
+COPY supervisord.conf /etc/supervisor/conf.d/pootle.conf
+CMD ["/usr/local/bin/run-pootle.sh"]
