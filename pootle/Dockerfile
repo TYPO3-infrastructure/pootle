@@ -29,7 +29,7 @@ RUN /usr/local/bin/apt-install build-essential \
   python-setuptools
 # Install python packages
 RUN pip install -q virtualenv \
-    MySQL-python \
+    mysqlclient \
     flup \
     python-memcached \
     python-Levenshtein \
