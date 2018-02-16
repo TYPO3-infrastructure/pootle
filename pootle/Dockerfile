@@ -6,7 +6,8 @@ ENV POOTLE_VERSION="2.8.2"
 RUN chmod -R 2777 /tmp
 
 # Install apt packages
-RUN /usr/local/bin/apt-install build-essential \
+RUN /usr/bin/apt-get update && \
+  /usr/local/bin/apt-install build-essential \
   swig \
   git \
   xmlstarlet \
