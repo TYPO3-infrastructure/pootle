@@ -28,6 +28,10 @@ RUN /usr/bin/apt-get update && \
   python-xapian \
   xapian-tools \
   python-setuptools
+
+# Upgrade pip
+RUN pip install --upgrade pip
+
 # Install python packages
 RUN pip install -q virtualenv \
     mysqlclient \
@@ -36,12 +40,15 @@ RUN pip install -q virtualenv \
     python-Levenshtein \
     m2crypto \
     wheel
+
 # Install pootle
 RUN pip install -I pootle==$POOTLE_VERSION
+
 # Configure pootle
 COPY pootle.conf /root/.pootle/pootle.conf
 RUN mkdir -p /srv/pootle/po/.tmp
 RUN ln -s /usr/lib/python2.7/dist-packages/xapian /usr/local/lib/python2.7/dist-packages/xapian
+
 # RUN pootle setup
 COPY pootle.sh /etc/profile.d/pootle.sh
 RUN /etc/profile.d/pootle.sh
