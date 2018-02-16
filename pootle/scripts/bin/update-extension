@@ -19,12 +19,30 @@ function onexit() {
 	exit $exit_status
 }
 
+function update_against_templates {
+	local PROJECT=$1
+	local FILE=$2
+
+	pushd ${POOTLE_PO}/$PROJECT >/dev/null
+
+	LANGUAGES=$(ls | grep -v templates)
+	for L in $LANGUAGES; do
+		if [ ! -f templates/$FILE ]; then
+			echo "OOPS! Something went wrong, cannot find ${POOTLE_PO}/$PROJECT/templates/$FILE" >&2
+			exit -1
+		fi
+		mkdir -p $(dirname $L/$FILE)
+		pot2po --template $L/$FILE --input templates/$FILE --output $L/$FILE.new
+		mv $L/$FILE.new $L/$FILE
+	done
+
+	popd >/dev/null
+}
+
 if [ $# -lt 1 ]; then
 	echo "Usage: $0 <extension-key>" >&2
 	exit 1
 fi
-
-SAVEIFS=$IFS
 
 EXTENSION=$(echo $1 | tr '[:upper:]' '[:lower:]')
 PROJECT_NAME="TYPO3.ext.${EXTENSION}"
@@ -49,83 +67,30 @@ if [ ! -d $TEMPLATE_DIRECTORY ]; then
 	mkdir -p $TEMPLATE_DIRECTORY
 fi
 
-if [ ! -d $LOCAL_GIT_CLONE_DIRECTORY/repos/$EXTENSION ]; then
-	echo "[ERROR]	No project sources found in ${LOCAL_GIT_CLONE_DIRECTORY}/repos/${EXTENSION}"
+if [ ! -d $LOCAL_GIT_CLONE_DIRECTORY/$PROJECT_NAME ]; then
+	echo "[ERROR]	No project sources found in ${LOCAL_GIT_CLONE_DIRECTORY}/${PROJECT_NAME}"
 	onexit 1
 fi
 
-pushd $LOCAL_GIT_CLONE_DIRECTORY/repos >/dev/null
+pushd $LOCAL_GIT_CLONE_DIRECTORY/$PROJECT_NAME >/dev/null
 
-IFS=$(echo -en "\n\b")
+git checkout .
+git pull
 
-#
-# Create directory structure for templates
-rm -rf /tmp/TYPO3.ext.${EXTENSION}
-for FILE in $(find ${EXTENSION}/ -name \*.xml); do
-	grep "T3locallang" "${FILE}" >/dev/null
-	if [ $? -eq 0 ]; then
-		mkdir -p /tmp/TYPO3.ext.$(dirname ${FILE})
-		cp ${FILE} /tmp/TYPO3.ext.${FILE}
-	fi
-done
-for FILE in $(find ${EXTENSION}/ -name \*.xlf); do
-	# Count number of dots in filename to skip e.g., de.locallang.xlf
-	DOTS=$(echo -n $(basename $FILE) | sed 's/[^.]//g' | wc -c)
-	if [ ${DOTS} -eq 1 ]; then
-		mkdir -p /tmp/TYPO3.ext.$(dirname ${FILE})
-		cp ${FILE} /tmp/TYPO3.ext.${FILE}
-	fi
+echo -n "Synchronizing stores ... "
+pootle sync_stores --force --overwrite --project=$PROJECT_NAME >/dev/null 2>&1
+echo "done."
+
+rm -rf $PROJECT_DIRECTORY/templates/*
+for XLF in $(find . -name \*.xlf | egrep -v '/..\.' | cut -b3-); do
+	DIR=$(dirname $XLF)
+	mkdir -p $PROJECT_DIRECTORY/templates/$DIR
+	cp $XLF $PROJECT_DIRECTORY/templates/$DIR/
+	update_against_templates $PROJECT_NAME $XLF
 done
 
-for FILE in $(find /tmp/TYPO3.ext.${EXTENSION} -name \*.xml); do
-	grep "T3locallang" "${FILE}" >/dev/null
-	if [ $? -eq 0 ]; then
-		XLF_FILE=$(echo ${FILE} | sed s/.xml$/.xlf/)
-		if [ ! -f ${XLF_FILE} ]; then
-			echo "[INFO]    Convert LLXML to XLIFF for file ${FILE}"
-			xsltproc --stringparam lang en \
-				--stringparam extension ${EXTENSION} \
-				--stringparam date "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" ${XSL_LLXML2TEMPLATE} ${FILE} | \
-				xmlstarlet ed --insert "/xliff/file/body/trans-unit" --type attr -n xml:space -v preserve > ${XLF_FILE}
-		fi
-	fi
-	rm -f ${FILE}
-done
 popd >/dev/null
 
-#
-# Deploy new templates files
-echo "[INFO]    Deploy new templates to ${TEMPLATE_DIRECTORY}"
-
-mkdir -p /tmp/backup
-cd ${TEMPLATE_DIRECTORY}/../../ >/dev/null && \
-	tar cfzp /tmp/backup/${PROJECT_NAME}-$(date +%Y%m%d).tar.gz ${PROJECT_NAME} && \
-		cd - >/dev/null && \
-		rm -Rf ${TEMPLATE_DIRECTORY} && \
-		mkdir -p ${TEMPLATE_DIRECTORY} && \
-		cp -r /tmp/${PROJECT_NAME}/* ${TEMPLATE_DIRECTORY} || \
-		onexit 5
-
-#
-# Check project available language
-check_available_languages ${PROJECT_NAME}
-
-# Find new files automatically
-echo "[INFO]    Update stores"
-pootle update_stores --force --project=${PROJECT_NAME} >/dev/null 2>&1
-
-echo "[INFO]    Refresh statistics"
-pootle refresh_stats --project=${PROJECT_NAME} >/dev/null 2>&1
-
-#
-# Cleanup
-pushd /tmp >/dev/null
-if [ -d ${EXTENSION} ]; then
-	rm -rf ${EXTENSION}
-	rm -rf TYPO3.ext.${EXTENSION}
-fi
-popd >/dev/null
-
-IFS=$SAVEIFS
+pootle update_stores --project=$PROJECT_NAME
 
 onexit

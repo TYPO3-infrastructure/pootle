@@ -24,6 +24,12 @@ On the first run you must setup your database and create an admin user.
 
 ### Create project in pootle
 
+Connect to the Pootle docker image and initialize the git clone:
+
+    docker-compose exec pootle bash
+    ./scripts/bin/initialize-project https://github.com/yourname/someproject.git TYPO3.ext.someproject
+
+
 First you must create a project in the pootle administration backend. Only super-users can access the backend.
 By naming convention, your project in pootle must be named `TYPO3.ext.myextname` if your extension name is `myextname`.  
 As file-type choose `XLIFF (.xlf)` and leave the other settings default.
