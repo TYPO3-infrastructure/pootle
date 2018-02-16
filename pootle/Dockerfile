@@ -1,5 +1,5 @@
 FROM webdevops/bootstrap:ubuntu-16.04
-MAINTAINER Hans Hoechtl "hhoechtl@1drop.de"
+MAINTAINER Xavier Perseguers "xavier@causal.ch"
 
 ENV POOTLE_VERSION="2.8.2"
 
