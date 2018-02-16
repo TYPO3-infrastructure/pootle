@@ -85,9 +85,9 @@ server {
         access_log off; 
     }
 
-    #location ^~ /assets/ {
-    #    root /usr/local/lib/python2.7/dist-packages/pootle/;
-    #}
+    location ^~ /assets/ {
+        root /usr/local/lib/python2.7/dist-packages/pootle/;
+    }
 
     location ^~ /l10n_ter/ {
         root /;
