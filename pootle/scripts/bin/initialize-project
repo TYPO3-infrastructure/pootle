@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 https://github.com/yourname/someproject.git TYPO3.ext.someproject" >&2
+	exit 1
+fi
+
+. /etc/profile.d/pootle.sh
+
+cd $LOCAL_GIT_CLONE_DIRECTORY
+git clone $1 $2
+
+mkdir -p $POOTLE_PO/$2/templates
+
+echo "Project successfully initialized. Please go to Pootle admin and create project $2"

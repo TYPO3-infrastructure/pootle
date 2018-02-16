@@ -2,18 +2,19 @@ version: '2'
 
 services: 
   nginx:
-    build:
-      context: nginx
-      dockerfile: Dockerfile
+    image: nginx
     depends_on: 
       - pootle
-    # ports: 
-    #   - "80:80"
+    volumes:
+      - ./nginx/pootle.template:/etc/nginx/conf.d/pootle.template
+    ports:
+      - "8080:80"
     volumes_from: 
       - pootle
     environment: 
-      - VIRTUAL_HOST=pootle.docker
-      - VIRTUAL_PORT=80
+      - NGINX_HOST=pootle.docker
+      - NGINX_PORT=80
+    command: /bin/bash -c "envsubst '$$NGINX_PORT' < /etc/nginx/conf.d/pootle.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
   pootle:
     build:
       context: pootle
@@ -30,7 +31,8 @@ services:
     env_file:
       - etc/environment.yml
   mysql:
-    image: mariadb:10
+    image: mariadb:10.3
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --init-connect='SET NAMES utf8mb4;'
     volumes:
       - mysql-data:/var/lib/mysql
     env_file:

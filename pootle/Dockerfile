@@ -1,12 +1,13 @@
 FROM webdevops/bootstrap:ubuntu-16.04
-MAINTAINER Hans Hoechtl "hhoechtl@1drop.de"
+MAINTAINER Xavier Perseguers "xavier@causal.ch"
 
-ENV POOTLE_VERSION="2.7.6"
+ENV POOTLE_VERSION="2.8.2"
 
 RUN chmod -R 2777 /tmp
 
 # Install apt packages
-RUN /usr/local/bin/apt-install build-essential \
+RUN /usr/bin/apt-get update && \
+  /usr/local/bin/apt-install build-essential \
   swig \
   git \
   xmlstarlet \
@@ -27,20 +28,28 @@ RUN /usr/local/bin/apt-install build-essential \
   python-xapian \
   xapian-tools \
   python-setuptools
+
+# Upgrade pip
+RUN pip install --upgrade pip
+
 # Install python packages
 RUN pip install -q virtualenv \
-    MySQL-python \
+    mysqlclient \
     flup \
     python-memcached \
     python-Levenshtein \
     m2crypto \
     wheel
+
 # Install pootle
 RUN pip install -I pootle==$POOTLE_VERSION
+
 # Configure pootle
 COPY pootle.conf /root/.pootle/pootle.conf
+COPY run-pootle.sh /usr/local/bin/run-pootle.sh
 RUN mkdir -p /srv/pootle/po/.tmp
 RUN ln -s /usr/lib/python2.7/dist-packages/xapian /usr/local/lib/python2.7/dist-packages/xapian
+
 # RUN pootle setup
 COPY pootle.sh /etc/profile.d/pootle.sh
 RUN /etc/profile.d/pootle.sh
@@ -54,7 +63,7 @@ RUN pootle assets build
 
 WORKDIR /home/pootle
 
-EXPOSE 8080
+EXPOSE 8000
 VOLUME ["/usr/local/lib/python2.7/dist-packages/pootle"]
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-CMD ["/usr/bin/supervisord"]
+COPY supervisord.conf /etc/supervisor/conf.d/pootle.conf
+CMD ["/usr/local/bin/run-pootle.sh"]

@@ -21,7 +21,7 @@ function log_notice() {
 
 # Usage: mysqlpipe "sql-query"
 function mysqlpipe() {
-	echo $@ | mysql -u $MYSQL_USER -p"$MYSQL_PASSWORD" -h mysql $MYSQL_DATABASE | sed '1d'
+	echo $@ | MYSQL_PWD="$MYSQL_PASSWORD" mysql -u $MYSQL_USER -h mysql $MYSQL_DATABASE | sed '1d'
 }
 
 #
@@ -167,7 +167,7 @@ function lastedit() {
 		AND p.code = '$PROJECT'
 		AND l.code = '$LANGUAGE'
 		GROUP BY p.id, l.code;" \
-	| awk '{ print $6 }')
+	| awk '{ print $6 }' | cut -d. -f1)
 
 	if [ -z "$timestamp" ]; then
 		echo 0
