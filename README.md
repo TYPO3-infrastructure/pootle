@@ -19,6 +19,14 @@ On the first run you must setup your database and create an admin user.
     pootle createsuperuser
     pootle verify_user --all
 
+After that, quit and restart the `pootle` container. You should now be able to connect to your Pootle instance by opening your browser
+on http://localhost:8080 (this port `8080` is defined in the `docker-compose.yml` configuration file).
+
+Note: one-line to restart the `pootle` container:
+
+```
+docker ps | grep pootle | awk '{ print $1 }' | xargs docker restart
+```
 
 ## Feeding pootle
 
