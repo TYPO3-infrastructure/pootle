@@ -29,13 +29,13 @@ for PROJECT in ${PROJECTS};
 do
 	EXTENSION=$(echo ${PROJECT} | cut -b13-)
 
-	UPDATE_SCRIPT=${LOCAL_GIT_CLONE_DIRECTORY}/scripts/${EXTENSION}.sh
-	if [ ! -f ${UPDATE_SCRIPT} ]; then
-		echo "[WARN] No update script found for extension ${EXTENSION} at ${UPDATE_SCRIPT}"
-	else
-		echo "[INFO]    Updating extension ${EXTENSION}"
-		${UPDATE_SCRIPT}
-	fi
+	#UPDATE_SCRIPT=${LOCAL_GIT_CLONE_DIRECTORY}/scripts/${EXTENSION}.sh
+	#if [ ! -f ${UPDATE_SCRIPT} ]; then
+	#	echo "[WARN] No update script found for extension ${EXTENSION} at ${UPDATE_SCRIPT}"
+	#else
+	#	echo "[INFO]    Updating extension ${EXTENSION}"
+	#	${UPDATE_SCRIPT}
+	#fi
 	echo "[INFO]    Syncing extension ${EXTENSION}"
 	${POOTLE_SCRIPT_HOME}/bin/update-extension ${EXTENSION}
 done
